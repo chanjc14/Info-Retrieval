@@ -11,43 +11,37 @@ import re
 number_of_returned_results = 10 # Adjustable variable for returned results
 
 def CreateDB(): # Initialize and populate database
-    outfile = open("testoutput.txt", "w")
     # Create custom schema for database
     schema = Schema(title=ID(stored=True), content=TEXT(stored=True))
     ix = index.create_in("indexdir", schema)
     ix = index.open_dir("indexdir")
     writer = ix.writer()
     # Import and generate database
-    with open("crawled_websites.json") as f:
+    with open("crawled_websites.json", encoding="utf-8") as f:
         data = json.load(f)
     for url in data:
         writer.add_document(title=url, content=data[url])
     writer.commit()
-    with ix.reader() as reader:
-        '''
-        for item in reader.all_terms():
-            outfile.write(item)
-        '''
-        print("Test:")
-        inc = 0
-        doc_freq_list = []
-        for item in reader.all_terms():
-            if inc == 300:
-                break
-            term = item[1].decode("utf-8")
-            #print(term, reader.frequency('content', term))
-            m = reader.postings("content", term)
-            print(term, end=': ')
-            for i in m.all_ids():
-                doc_freq_list.append(i)
-            for doc in doc_freq_list:
-                print(doc, end=" ")
-            print()
-            doc_freq_list.clear()
-            #print(term, reader.weight("content", term))
-            inc += 1
-    outfile.close()
     return ix
+
+def InvertedIndexBuilder(ix):
+    with open("inverted_index.txt", "w", encoding="utf-8") as outfile:
+        with ix.reader() as reader:
+            freq_list = []
+            space = " "
+            for item in reader.all_terms():
+                if item[0] == "content":
+                    term = item[1].decode("utf-8")
+                    m = reader.postings("content", term)
+                    term += ": "
+                    outfile.write(term)
+                    for doc in m.all_ids():
+                        freq_list.append(doc)
+                    for doc in freq_list:
+                        outfile.write(str(doc))
+                        outfile.write(space)
+                    outfile.write("\n")
+                    freq_list.clear()
 
 def Search(ix, number_of_returned_results): # Searching functionality
     inp = '' # Variable to accept input from user for searches
@@ -76,7 +70,8 @@ def main():
     if not os.path.exists("indexdir"):
         os.mkdir("indexdir")
     ix = CreateDB()
-    #Search(ix, number_of_returned_results)
+    #InvertedIndexBuilder(ix)
+    Search(ix, number_of_returned_results)
     
 if __name__ == "__main__":
     main()
