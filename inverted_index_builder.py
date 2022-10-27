@@ -11,13 +11,11 @@ import re
 number_of_returned_results = 10 # Adjustable variable for returned results
 
 def CreateDB(): # Initialize and populate database
-    # Create custom schema for database
-    schema = Schema(title=ID(stored=True), content=TEXT(stored=True))
+    schema = Schema(title=ID(stored=True), content=TEXT(stored=True)) # Create custom schema for database
     ix = index.create_in("indexdir", schema)
     ix = index.open_dir("indexdir")
     writer = ix.writer()
-    # Import and generate database
-    with open("crawled_websites.json", encoding="utf-8") as f:
+    with open("crawled_websites.json", encoding="utf-8") as f: # Import and generate database
         data = json.load(f)
     for url in data:
         writer.add_document(title=url, content=data[url])
@@ -47,23 +45,30 @@ def Search(ix, number_of_returned_results): # Searching functionality
     inp = '' # Variable to accept input from user for searches
     with ix.searcher() as searcher:
         parser = QueryParser("content", ix.schema)
-        print("\nType words to search or 'exit' to exit the program")
+        print("\nEnter words to search, 'exit' to exit the program or 'help' for more information.")
         while True:
             while not inp:
                 inp = input("Enter search term(s): ")
             if inp == "exit":
                 print('Exiting program...')
                 exit()
-            query = parser.parse(inp)
-            results = searcher.search(query, limit=number_of_returned_results)
-            print(results)
-            ans = input("Display ranked results, y/n? ")
-            if ans == 'y':
-                if not results: print("There were no results found!")
-                else:#print(f"Result: {results[0]}")
-                    for hit in results:
-                        print(hit["title"])
-                        print(hit.highlights("content"))
+            elif inp == "help":
+                print("\nEnter words to search or 'exit' to exit the program")
+            else:
+                query = parser.parse(inp)
+                #docnums = list(searcher.document_numbers(content=inp))
+                results = searcher.search(query, limit=number_of_returned_results)
+                print(results)
+                ans = input("Display ranked results, y/n? ")
+                if ans == 'y':
+                    if not results: print("There were no results found!")
+                    else:
+                        print()
+                        for i, hit in enumerate(results):
+                            #print(f"Doc # {docnums[i]}", end=", ")
+                            print(f'Doc {i}: {hit["title"]}')
+                            print(hit.highlights("content"))
+                            print()
             inp = '' # Reset input variable for searching
             
 def main():
