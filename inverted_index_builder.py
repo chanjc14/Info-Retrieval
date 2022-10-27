@@ -46,16 +46,6 @@ def CreateDB(): # Initialize and populate database
             doc_freq_list.clear()
             #print(term, reader.weight("content", term))
             inc += 1
-        
-        
-        #for item in reader.all_terms():
-            
-        '''
-        # This prints out all the terms
-        if item[0] == 'content':
-            print(item[1])
-        '''
-        #outfile.write('\n'.join(str(item) for item in reader.all_terms()))
     outfile.close()
     return ix
 
